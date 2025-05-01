@@ -27,6 +27,7 @@ obstacle_x=0
 obstacle_y=-300
 lives=3
 collision_happened=False
+night_mode=False
 
 def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
     glColor3f(1,1,1)
@@ -55,10 +56,15 @@ def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
 
 
 def draw_shapes():
-    global cloud1_x,cloud1_y,cloud2_x,cloud2_y,cloud3_x,cloud3_y,cloud4_x,cloud4_y,s,snowman_x,snowman_y,obstacle_x,obstacle_y
+    global cloud1_x,cloud1_y,cloud2_x,cloud2_y,cloud3_x,cloud3_y,cloud4_x,cloud4_y,s,snowman_x,snowman_y,obstacle_x,obstacle_y,collision_happened
 
     glPushMatrix()  # Save the current matrix state
-    glColor3f(1, 1, 1)
+    if collision_happened==True and night_mode==False:
+        glColor3f(0.529, 0.808, 0.922)
+    elif collision_happened==True and night_mode==True:
+        glColor3f(0.05, 0.05, 0.2)
+    else:
+        glColor3f(1, 1, 1)
     glTranslatef(0+snowman_x, 0+snowman_y, 0)
     glTranslatef(0, 250, 0)  
     gluSphere(gluNewQuadric(), 50, 10, 10) # Take cube size as the parameter
@@ -76,7 +82,10 @@ def draw_shapes():
     glPopMatrix() 
     #cloud1 part1
     glPushMatrix()
-    glColor3f(0.85, 0.85, 0.85)
+    if night_mode==False:
+        glColor3f(0.85, 0.85, 0.85)
+    else:
+        glColor3f(0.55, 0.55, 0.55)
     glTranslatef(cloud1_x, cloud1_y, 0)
     gluSphere(gluNewQuadric(), 60, 10, 10)
     glPopMatrix()
@@ -138,7 +147,7 @@ def keyboardListener(key, x, y):
 
     """
 
-    global camera_pos
+    global camera_pos,night_mode
     x, y, z = camera_pos
     # Move camera up (UP arrow key)
     if key == b'm':
@@ -154,10 +163,11 @@ def keyboardListener(key, x, y):
     # moving camera right (RIGHT arrow key)
     if key == b'r':
         x += 1  # Small angle increment for smooth movement
-
+    if key == b'n':  
+        night_mode=not night_mode
     camera_pos = (x, y, z)
     # # Move forward (W key)
-    # if key == b'w':  
+    
 
     # # Move backward (S key)
     # if key == b's':
@@ -279,6 +289,7 @@ def idle():
         elif abs(obstacle_x - snowman_x) >= 500 or abs(obstacle_y - 250) >= 20:
             collision_happened = False
     
+    
     # Ensure the screen updates with the latest changes
     glutPostRedisplay()
 
@@ -290,6 +301,7 @@ def showScreen():
     - Draws everything of the screen
     """
     # Clear color and depth buffers
+    global night_mode
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()  # Reset modelview matrix
     glViewport(0, 0, 1000, 700)  # Set viewport size
@@ -304,8 +316,10 @@ def showScreen():
 
     # Draw the grid (game floor)
     glBegin(GL_QUADS)
-    
-    glColor3f(0.529, 0.808, 0.922)
+    if night_mode==True:
+        glColor3f(0.05, 0.05, 0.2)
+    else:
+        glColor3f(0.529, 0.808, 0.922)
     glVertex3f(-GRID_LENGTH, GRID_LENGTH, 0)
     glVertex3f(GRID_LENGTH, GRID_LENGTH, 0)
     glVertex3f(GRID_LENGTH, -GRID_LENGTH, 0)
