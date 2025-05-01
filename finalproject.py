@@ -24,10 +24,9 @@ s=0
 snowman_x=0
 snowman_y=0
 obstacle_x=0
-obstacle_y=0
-cloud2=random.randint(200,600) 
-cloud3=random.randint(-400,400) 
-cloud4=random.randint(200,600)
+obstacle_y=-300
+lives=3
+collision_happened=False
 
 def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
     glColor3f(1,1,1)
@@ -194,11 +193,11 @@ def specialKeyListener(key, x, y):
         z-=1
     # moving camera left (LEFT arrow key)
     if key == GLUT_KEY_LEFT:
-        snowman_x-= 5 # Small angle decrement for smooth movement
+        snowman_x-= 10 # Small angle decrement for smooth movement
 
     # moving camera right (RIGHT arrow key)
     if key == GLUT_KEY_RIGHT:
-        snowman_x+= 5  # Small angle increment for smooth movement
+        snowman_x+= 10  # Small angle increment for smooth movement
     camera_pos = (x, y, z)
 
 def mouseListener(button, state, x, y):
@@ -234,7 +233,7 @@ def idle():
     Idle function that runs continuously:
     - Triggers screen redraw for real-time updates.
     """
-    global s,inc,dec,obstacle_y,obstacle_x,cloud1_x,cloud1_y,cloud2_x,cloud2_y,cloud3_x,cloud3_y,cloud4_x,cloud4_y
+    global s,inc,dec,obstacle_y,obstacle_x,cloud1_x,cloud1_y,cloud2_x,cloud2_y,cloud3_x,cloud3_y,cloud4_x,cloud4_y,snowman_x,lives,collision_happened
     if inc:
         if s>=0.05:
             inc=False
@@ -248,23 +247,37 @@ def idle():
     if obstacle_y>=850:
         obstacle_x=random.randint(-600,400)
         obstacle_y=-800
-    obstacle_y+=0.2
+    obstacle_y+=0.4
     if cloud1_y>900:
         cloud1_x=random.randint(300,600)
         cloud1_y=-900
-    cloud1_y+=0.2
+    cloud1_y+=0.4
     if cloud2_y>900:
         cloud2_x=random.randint(-700,-300)
         cloud2_y=-900
-    cloud2_y+=0.2
+    cloud2_y+=0.4
     if cloud3_y>900:
         cloud3_x=random.randint(300,600)
         cloud3_y=-900
-    cloud3_y+=0.2
+    cloud3_y+=0.4
     if cloud4_y>900:
         cloud4_x=random.randint(-700,-300)
         cloud4_y=-900
-    cloud4_y+=0.2
+    cloud4_y+=0.4
+    if obstacle_x>=0 and snowman_x>=obstacle_x:
+        if (-obstacle_x + snowman_x) < 500 and abs(obstacle_y - 250) < 20:
+            if not collision_happened:
+                lives -= 1
+                collision_happened = True
+        elif abs(obstacle_x - snowman_x) >= 500 or abs(obstacle_y - 250) >= 20:
+            collision_happened = False
+    elif obstacle_x<0 and snowman_x>=obstacle_x:
+        if (-obstacle_x + snowman_x) < 500 and abs(obstacle_y - 250) < 20:
+            if not collision_happened:
+                lives -= 1
+                collision_happened = True
+        elif abs(obstacle_x - snowman_x) >= 500 or abs(obstacle_y - 250) >= 20:
+            collision_happened = False
     
     # Ensure the screen updates with the latest changes
     glutPostRedisplay()
@@ -318,7 +331,7 @@ def showScreen():
 
     # Display game info text at a fixed screen position
     draw_text(10, 770, f"A Random Fixed Position Text")
-    draw_text(10, 740, f"See how the position and variable change?: {rand_var}")
+    draw_text(10, 740, f"Remaining lives: {lives}")
 
     draw_shapes()
 
