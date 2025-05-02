@@ -47,7 +47,11 @@ bullet_y = 0
 bullet_angle = 90  # default straight up
 
 # Nose angle (rotatable with 'a' key)
-nose_angle = 90
+ThreeD=False
+if ThreeD:
+    nose_angle=270
+else:
+    nose_angle = 90
 enemy_radius=50
 enemy_num=1
 enemy_health=2
@@ -62,6 +66,10 @@ coin_radius = 30
 multiplier = 1  # Default multiplier is 1x
 multiplier_duration = 0  # Duration for multiplier effect
 multiplier_timer = 0 
+not_enough=False
+Ghost_mode=False
+count=0
+
 def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
     glColor3f(1,1,1)
     glMatrixMode(GL_PROJECTION)
@@ -90,22 +98,40 @@ def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
 
 def draw_shapes():
     global cloud1_x,cloud1_y,cloud2_x,cloud2_y,cloud3_x,cloud3_y,cloud4_x,cloud4_y,s,snowman_x,snowman_y,obstacle_x,obstacle_y,collision_happened
-    global enemy_x,enemy_y,enemy_health,enemy_num
+    global enemy_x,enemy_y,enemy_health,enemy_num,Ghost_mode,ThreeD
     glPushMatrix()  # Save the current matrix state
-    if collision_happened==True and night_mode==False:
+   
+    if collision_happened==True and night_mode==False and Ghost_mode==False:
         glColor3f(0.529, 0.808, 0.922)
-    elif collision_happened==True and night_mode==True:
+    elif collision_happened==True and night_mode==True and Ghost_mode==False:
         glColor3f(0.05, 0.05, 0.2)
-    else:
+    elif Ghost_mode==False:
         glColor3f(1, 1, 1)
+    else:
+        glColor3f(0.8, 0.8, 0.8)
     glTranslatef(0+snowman_x, 0+snowman_y, 0)
     glTranslatef(0, 250, 0)  
+
     gluSphere(gluNewQuadric(), 50, 10, 10) # Take cube size as the parameter
-    glTranslatef(0, 70, 0) 
+    if ThreeD==False:
+        glTranslatef(0, 70, 0) 
+    else:
+        
+        glTranslatef(0, 5, 120) 
+        glRotatef(80, 1, 0, 0)
     gluSphere(gluNewQuadric(), 30, 10, 10)
+    if ThreeD==True:
+        glRotatef(-80, 1, 0, 0) 
     glTranslatef(0, -70, 0) 
-    glTranslatef(0, 60, 0) 
-    glRotatef(180, 1, 0, 0)
+    if ThreeD==False:
+        glTranslatef(0, 60, 0) 
+    else:
+
+        glTranslatef(0, 80, 0) 
+    if ThreeD==False:
+        glRotatef(180, 1, 0, 0)
+    else:
+        glRotatef(80, 1, 0, 0)
     glRotatef(nose_angle+90, 0, 1, 0) 
     glColor3f(1.0, 0.647, 0.0)
     gluCylinder(gluNewQuadric(), 10, 5, 40, 10, 10)
@@ -278,7 +304,7 @@ def update_bullet():
 
 def keyboardListener(key, x, y):
     global camera_pos,night_mode,Game_over,lives,cloud1_x,cloud1_y,cloud2_x,cloud2_y,cloud3_x,cloud3_y,cloud4_x,cloud4_y,s,snowman_x,snowman_y,obstacle_x,obstacle_y,inc,dec,collision_happened,score
-    global nose_angle, bullet_active, bullet_x, bullet_y, bullet_angle,gun_power,enemy_num
+    global nose_angle, bullet_active, bullet_x, bullet_y, bullet_angle,gun_power,enemy_num,Ghost_mode,coins,not_enough,ThreeD,count
     x, y, z = camera_pos
     # Move camera up (UP arrow key)
     if key == b'm':
@@ -321,7 +347,19 @@ def keyboardListener(key, x, y):
         score=0
         gun_power=1
         enemy_num=1
-    
+    if key == b'g':
+        if Ghost_mode==False and not_enough==False:
+            if coins>=3:
+                count=enemy_num
+                Ghost_mode=True
+                coins-=3
+            else:
+                not_enough=True
+        elif not_enough==True:
+            Ghost_mode=False
+            not_enough=False
+        elif Ghost_mode==True:
+            Ghost_mode=False
     if key == b'a':
         nose_angle = (nose_angle + 10) % 360
     if key == b'd':
@@ -331,6 +369,11 @@ def keyboardListener(key, x, y):
         bullet_x = snowman_x  # or adjust slightly if nose is offset
         bullet_y = snowman_y + 250
         bullet_angle = nose_angle
+
+    if key == b'3':
+        ThreeD=True
+    if key == b'2':
+        ThreeD=False
     camera_pos = (x, y, z)
 
 
@@ -339,7 +382,7 @@ def specialKeyListener(key, x, y):
     """
     Handles special key inputs (arrow keys) for adjusting the camera angle and height.
     """
-    global snowman_x,snowman_y,camera_pos
+    global snowman_x,snowman_y,camera_pos,ThreeD
     x, y, z = camera_pos
     # Move camera up (UP arrow key)
     if key == GLUT_KEY_UP:
@@ -350,11 +393,17 @@ def specialKeyListener(key, x, y):
         z-=1
     # moving camera left (LEFT arrow key)
     if key == GLUT_KEY_LEFT:
-        snowman_x-= 10 # Small angle decrement for smooth movement
+        if ThreeD==False:
+            snowman_x-= 10 # Small angle decrement for smooth movement
+        else:
+            snowman_x+=10
 
     # moving camera right (RIGHT arrow key)
     if key == GLUT_KEY_RIGHT:
-        snowman_x+= 10  # Small angle increment for smooth movement
+        if ThreeD==False:
+            snowman_x+= 10  # Small angle increment for smooth movement
+        else:
+            snowman_x-=10
     
     
     camera_pos = (x, y, z)
@@ -377,6 +426,7 @@ def mouseListener(button, state, x, y):
 
 
 def setupCamera():
+    global ThreeD
 
     glMatrixMode(GL_PROJECTION)  # Switch to projection matrix mode
     glLoadIdentity()  # Reset the projection matrix
@@ -388,9 +438,14 @@ def setupCamera():
     # Extract camera position and look-at target
     x, y, z = camera_pos
     # Position the camera and set its orientation
-    gluLookAt(x, 0, z,   # Camera position (x, y, z) - in front and slightly above
-              0, 0, 0,       # Target: look at the origin
-              0, 1, 0)  # Up vector (z-axis)
+    if ThreeD==False:
+        gluLookAt(x, 0, z,   # Camera position (x, y, z) - in front and slightly above
+                0, 0, 0,       # Target: look at the origin
+                0, 1, 0)  # Up vector (z-axis)
+    else:
+        gluLookAt(x, y, z,   
+                0, 0, 0,       
+                0, 0, 1) 
 
 
 def idle():
@@ -400,7 +455,7 @@ def idle():
     """
     global s,inc,dec,obstacle_y,obstacle_x,cloud1_x,cloud1_y,cloud2_x,cloud2_y,cloud3_x,cloud3_y,cloud4_x,cloud4_y,snowman_x,lives,collision_happened,Game_over
     global power_up_x,power_up_y,gun_power,powerup, enemy_x,enemy_y,enemy_hit,i,enemy_num,enemy_dead,enemy_health
-    global coin_x,coin_y,coin_collected,coin_radius,score,multiplier_timer,multiplier_duration,coins
+    global coin_x,coin_y,coin_collected,coin_radius,score,multiplier_timer,multiplier_duration,coins,Ghost_mode,count,not_enough
     if pause==False and Game_over==False:
         if inc:
             if s>=0.05:
@@ -443,7 +498,8 @@ def idle():
         if obstacle_x>=0 and snowman_x>=obstacle_x:
             if (-obstacle_x + snowman_x) < 500 and abs(obstacle_y - 250) < 20:
                 if not collision_happened:
-                    lives -= 1
+                    if Ghost_mode==False:
+                        lives -= 1
                     collision_happened = True
             elif abs(obstacle_x - snowman_x) >= 500 or abs(obstacle_y - 250) >= 20:
                 collision_happened = False
@@ -455,13 +511,19 @@ def idle():
             elif abs(obstacle_x - snowman_x) >= 500 or abs(obstacle_y - 250) >= 20:
                 collision_happened = False
 
-        if abs(-power_up_x + snowman_x) < 50 and abs(power_up_y - snowman_y) < 2:
-            if not powerup:
-                gun_power+=1
-                powerup = True
-        elif abs(power_up_x - snowman_x) >= 50 or abs(power_up_y - snowman_y) >= 2:
-            powerup = False
+        
+        dx = snowman_x -power_up_x
+        dy = snowman_y + 250 - power_up_y  # Match vertical snowman position
+        distance = (dx ** 2 + dy ** 2) ** 0.5
 
+        if distance < 50 + 50:  # Check if the snowman collides with the coin
+            gun_power+=1
+            powerup = True  # Mark the coin as collected
+            print(f"Coin collected! Score: {score}")
+        if powerup:
+            power_up_y = -4000  # Reset coin position
+            power_up_x = random.randint(-500, 500)  # Randomize the new coin position
+            powerup = False
         if multiplier_timer > 0:
             multiplier_timer -= 1
             multiplier_duration = max(0, (multiplier_timer / 60))  # Convert frames to seconds for duration
@@ -497,6 +559,9 @@ def idle():
             enemy_y = -800
             enemy_hit = False
             enemy_num+=1
+            if enemy_num-count>3:
+                Ghost_mode=False
+                not_enough=False
             if enemy_num>0 and enemy_num<=15:
                 enemy_health=2
             elif enemy_num>15 and enemy_num<=30:
@@ -516,7 +581,8 @@ def idle():
         distance = (dx ** 2 + dy ** 2) ** 0.5
 
         if distance < 80 and not enemy_hit:  # 80 = approx radius sum
-            lives -= 1
+            if Ghost_mode==False:
+                lives -= 1
             enemy_hit = True
             print("Collision with enemy! Lives left:", lives)
             if lives <= 0:
@@ -582,6 +648,7 @@ def showScreen():
         draw_text(10, 650, f"Monster Territory: Red")
     elif enemy_health==10:
         draw_text(10, 650, f"Monster Territory: Black")
+    # draw_text(10, 620, f"Coins: {coins}")
     draw_text(10, 620, f"Coins: {coins}")
     if enemy_dead:
         if enemy_num>0 and enemy_num<=15:
@@ -592,6 +659,12 @@ def showScreen():
             draw_text(10, 590, f"Monster Successfully Terminated. Reward 8 points")
         elif enemy_num>60:
             draw_text(10, 590, f"Monster Successfully Terminated. Reward 10 points")
+    if not_enough==True:
+        draw_text(10, 560, f"NOT ENOUGH COINS TO ACTIVATE GHOST MODE") 
+    elif Ghost_mode==False:   
+       draw_text(10, 560, f"Ghost Mode= OFF") 
+    else:
+        draw_text(10, 560, f"Ghost Mode= ON")   
     if Game_over:
         draw_text(450, 450, f"GAME OVER")
         draw_text(450, 420, f"PRESS ENTER TO RESTART")
