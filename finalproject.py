@@ -98,48 +98,8 @@ def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
 
 def draw_shapes():
     global cloud1_x,cloud1_y,cloud2_x,cloud2_y,cloud3_x,cloud3_y,cloud4_x,cloud4_y,s,snowman_x,snowman_y,obstacle_x,obstacle_y,collision_happened
-    global enemy_x,enemy_y,enemy_health,enemy_num,Ghost_mode,ThreeD
-    glPushMatrix()  # Save the current matrix state
-   
-    if collision_happened==True and night_mode==False and Ghost_mode==False:
-        glColor3f(0.529, 0.808, 0.922)
-    elif collision_happened==True and night_mode==True and Ghost_mode==False:
-        glColor3f(0.05, 0.05, 0.2)
-    elif Ghost_mode==False:
-        glColor3f(1, 1, 1)
-    else:
-        glColor3f(0.8, 0.8, 0.8)
-    glTranslatef(0+snowman_x, 0+snowman_y, 0)
-    glTranslatef(0, 250, 0)  
+    global enemy_x,enemy_y,enemy_health,enemy_num,Ghost_mode,ThreeD,enemy_hit
 
-    gluSphere(gluNewQuadric(), 50, 10, 10) # Take cube size as the parameter
-    if ThreeD==False:
-        glTranslatef(0, 70, 0) 
-    else:
-        
-        glTranslatef(0, 5, 120) 
-        glRotatef(80, 1, 0, 0)
-    gluSphere(gluNewQuadric(), 30, 10, 10)
-    if ThreeD==True:
-        glRotatef(-80, 1, 0, 0) 
-    glTranslatef(0, -70, 0) 
-    if ThreeD==False:
-        glTranslatef(0, 60, 0) 
-    else:
-
-        glTranslatef(0, 80, 0) 
-    if ThreeD==False:
-        glRotatef(180, 1, 0, 0)
-    else:
-        glRotatef(80, 1, 0, 0)
-    glRotatef(nose_angle+90, 0, 1, 0) 
-    glColor3f(1.0, 0.647, 0.0)
-    gluCylinder(gluNewQuadric(), 10, 5, 40, 10, 10)
-    glRotatef(-180, 1, 0, 0)
-    glTranslatef(0, -60, 0) 
-    glTranslatef(0, -250, 0) 
-    glTranslatef(snowman_x, 0, 0)
-    glPopMatrix() 
     #cloud1 part1
     glPushMatrix()
     if night_mode==False:
@@ -186,6 +146,49 @@ def draw_shapes():
     gluSphere(gluNewQuadric(), 60, 10, 10)
     glPopMatrix() 
 
+    glPushMatrix()  # Save the current matrix state
+   
+    if (collision_happened==True or enemy_hit==True) and night_mode==False and Ghost_mode==False:
+        glColor3f(0.529, 0.808, 0.922)
+    elif (collision_happened==True or enemy_hit==True) and night_mode==True and Ghost_mode==False:
+        glColor3f(0.05, 0.05, 0.2)
+    elif Ghost_mode==False:
+        glColor3f(1, 1, 1)
+    else:
+        glColor3f(0.8, 0.8, 0.8)
+    glTranslatef(0+snowman_x, 0+snowman_y, 0)
+    glTranslatef(0, 250, 0)  
+
+    gluSphere(gluNewQuadric(), 50, 10, 10) # Take cube size as the parameter
+    if ThreeD==False:
+        glTranslatef(0, 70, 0) 
+    else:
+        
+        glTranslatef(0, 5, 120) 
+        glRotatef(80, 1, 0, 0)
+    gluSphere(gluNewQuadric(), 30, 10, 10)
+    if ThreeD==True:
+        glRotatef(-80, 1, 0, 0) 
+    glTranslatef(0, -70, 0) 
+    if ThreeD==False:
+        glTranslatef(0, 60, 0) 
+    else:
+
+        glTranslatef(0, 80, 0) 
+    if ThreeD==False:
+        glRotatef(180, 1, 0, 0)
+    else:
+        glRotatef(80, 1, 0, 0)
+    glRotatef(nose_angle+90, 0, 1, 0) 
+    glColor3f(1.0, 0.647, 0.0)
+    gluCylinder(gluNewQuadric(), 10, 5, 40, 10, 10)
+    glRotatef(-180, 1, 0, 0)
+    glTranslatef(0, -60, 0) 
+    glTranslatef(0, -250, 0) 
+    glTranslatef(snowman_x, 0, 0)
+    glPopMatrix() 
+    
+
     glPushMatrix()
 
     glScalef(1 + s, 1 + s, 1 + s)  # Scale everything together
@@ -197,35 +200,63 @@ def draw_shapes():
 
 
     glPopMatrix()
-
+    if ThreeD==False:
     #pause_button
-    if not pause:
-        glPushMatrix()
+        if not pause:
+            glPushMatrix()
 
-        glTranslatef(0, 800, 0)  # Apply vertical shift to all parts
+            glTranslatef(0, 800, 0)  # Apply vertical shift to all parts
 
-        glColor3f(0.9, 0.9, 0.0)  # yellow
-        glRotatef(180, 0, 1, 0)
-        gluCylinder(gluNewQuadric(), 10, 10, 50, 20, 20)
-        glRotatef(-180, 0, 1, 0)
-        glTranslatef(50, 0, 0)
-        glRotatef(180, 0, 1, 0)
-        gluCylinder(gluNewQuadric(), 10, 10, 50, 20, 20)
+            glColor3f(0.9, 0.9, 0.0)  # yellow
+            glRotatef(180, 0, 1, 0)
+            gluCylinder(gluNewQuadric(), 10, 10, 50, 20, 20)
+            glRotatef(-180, 0, 1, 0)
+            glTranslatef(50, 0, 0)
+            glRotatef(180, 0, 1, 0)
+            gluCylinder(gluNewQuadric(), 10, 10, 50, 20, 20)
 
-        glPopMatrix()
+            glPopMatrix()
 
-    #play_button
+        #play_button
+        else:
+            glPushMatrix()
+
+            glTranslatef(0, 750, 0)  # Apply vertical shift to all parts
+
+            glColor3f(0.9, 0.9, 0.0)  # yellow
+            glRotatef(90, 0, 1, 0)
+            gluCylinder(gluNewQuadric(), 30, 0, 70, 20, 20)
+
+
+            glPopMatrix()
     else:
-        glPushMatrix()
+        if not pause:
+            glPushMatrix()
 
-        glTranslatef(0, 750, 0)  # Apply vertical shift to all parts
+            glTranslatef(-50, 0, 620)  # Apply vertical shift to all parts
 
-        glColor3f(0.9, 0.9, 0.0)  # yellow
-        glRotatef(90, 0, 1, 0)
-        gluCylinder(gluNewQuadric(), 30, 0, 70, 20, 20)
+            glColor3f(0.9, 0.9, 0.0)  # yellow
+            glRotatef(180, 0, 1, 0)
+            gluCylinder(gluNewQuadric(), 10, 10, 30, 20, 20)
+            glRotatef(-180, 0, 1, 0)
+            glTranslatef(50, 0, 0)
+            glRotatef(180, 0, 1, 0)
+            gluCylinder(gluNewQuadric(), 10, 10, 30, 20, 20)
+
+            glPopMatrix()
+
+        #play_button
+        else:
+            glPushMatrix()
+
+            glTranslatef(-50, 0, 600)  # Apply vertical shift to all parts
+
+            glColor3f(0.9, 0.9, 0.0)  # yellow
+            glRotatef(90, 0, 1, 0)
+            gluCylinder(gluNewQuadric(), 0, 25, 60, 20, 20)
 
 
-        glPopMatrix()
+            glPopMatrix()
     if enemy_dead==False:
         glPushMatrix()
         if enemy_num>0 and enemy_num<=15:
@@ -304,7 +335,7 @@ def update_bullet():
 
 def keyboardListener(key, x, y):
     global camera_pos,night_mode,Game_over,lives,cloud1_x,cloud1_y,cloud2_x,cloud2_y,cloud3_x,cloud3_y,cloud4_x,cloud4_y,s,snowman_x,snowman_y,obstacle_x,obstacle_y,inc,dec,collision_happened,score
-    global nose_angle, bullet_active, bullet_x, bullet_y, bullet_angle,gun_power,enemy_num,Ghost_mode,coins,not_enough,ThreeD,count
+    global nose_angle, bullet_active, bullet_x, bullet_y, bullet_angle,gun_power,enemy_num,Ghost_mode,coins,not_enough,ThreeD,count,ThreeD
     x, y, z = camera_pos
     # Move camera up (UP arrow key)
     if key == b'm':
@@ -317,11 +348,17 @@ def keyboardListener(key, x, y):
             z-=5
     # moving camera left (LEFT arrow key)
     if key == b'l':
-        x -= 1  # Small angle decrement for smooth movement
+        if ThreeD==False:
+            x -= 1  # Small angle decrement for smooth movement
+        else:
+            x+=10
 
     # moving camera right (RIGHT arrow key)
     if key == b'r':
-        x += 1  # Small angle increment for smooth movement
+        if ThreeD==False:
+            x += 1  # Small angle increment for smooth movement
+        else:
+            x-=10
     if key == b'n':  
         night_mode=not night_mode
 
@@ -493,7 +530,7 @@ def idle():
         power_up_y+=0.4
         if coin_y>900:
             coin_x=random.randint(-700,-300)
-            coin_y=-1000
+            coin_y=-2000
         coin_y+=0.4
         if obstacle_x>=0 and snowman_x>=obstacle_x:
             if (-obstacle_x + snowman_x) < 500 and abs(obstacle_y - 250) < 20:
@@ -549,7 +586,7 @@ def idle():
 
         # Reset the coin when collected
         if coin_collected:
-            coin_y = -800  # Reset coin position
+            coin_y = -2000  # Reset coin position
             coin_x = random.randint(-500, 500)  # Randomize the new coin position
             coin_collected = False
 
@@ -584,6 +621,8 @@ def idle():
             if Ghost_mode==False:
                 lives -= 1
             enemy_hit = True
+        if distance>80:
+            enemy_hit=False
             print("Collision with enemy! Lives left:", lives)
             if lives <= 0:
                 Game_over = True
@@ -636,7 +675,7 @@ def showScreen():
     glEnd()
 
     # Display game info text at a fixed screen position
-    draw_text(10, 770, f"Welcome to Sky Drop Survival")
+    draw_text(10, 770, f"Welcome to Sky Drop Survival {enemy_hit}")
     draw_text(10, 740, f"Remaining lives: {lives}")
     draw_text(10, 710, f"Total Score: {score}")
     draw_text(10, 680, f"Gun Power: {gun_power}")
@@ -695,3 +734,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
