@@ -1,3 +1,4 @@
+
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
@@ -8,7 +9,7 @@ camera_pos = (0,500,500)
 
 fovY = 120  # Field of view
 GRID_LENGTH = 1200  # Length of grid lines
-rand_var = 423
+
 
 cloud1_x=500
 cloud1_y=450
@@ -48,7 +49,19 @@ bullet_angle = 90  # default straight up
 # Nose angle (rotatable with 'a' key)
 nose_angle = 90
 enemy_radius=50
-
+enemy_num=1
+enemy_health=2
+enemy_dead=False
+coins=0
+coin_taken=False
+coin_diss=False
+coin_x = random.randint(-500, 500)  # Random X position for the coin
+coin_y = -800  # Starting Y position for the coin (off-screen)
+coin_collected = False  # Whether the coin has been collected or not
+coin_radius = 30 
+multiplier = 1  # Default multiplier is 1x
+multiplier_duration = 0  # Duration for multiplier effect
+multiplier_timer = 0 
 def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
     glColor3f(1,1,1)
     glMatrixMode(GL_PROJECTION)
@@ -77,7 +90,7 @@ def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
 
 def draw_shapes():
     global cloud1_x,cloud1_y,cloud2_x,cloud2_y,cloud3_x,cloud3_y,cloud4_x,cloud4_y,s,snowman_x,snowman_y,obstacle_x,obstacle_y,collision_happened
-    global enemy_x,enemy_y
+    global enemy_x,enemy_y,enemy_health,enemy_num
     glPushMatrix()  # Save the current matrix state
     if collision_happened==True and night_mode==False:
         glColor3f(0.529, 0.808, 0.922)
@@ -93,7 +106,7 @@ def draw_shapes():
     glTranslatef(0, -70, 0) 
     glTranslatef(0, 60, 0) 
     glRotatef(180, 1, 0, 0)
-    glRotatef(nose_angle, 0, 1, 0) 
+    glRotatef(nose_angle+90, 0, 1, 0) 
     glColor3f(1.0, 0.647, 0.0)
     gluCylinder(gluNewQuadric(), 10, 5, 40, 10, 10)
     glRotatef(-180, 1, 0, 0)
@@ -187,12 +200,19 @@ def draw_shapes():
 
 
         glPopMatrix()
-
-    glPushMatrix()
-    glColor3f(0, 0, 0)  # Red color
-    glTranslatef(enemy_x, enemy_y, 0)
-    gluSphere(gluNewQuadric(), 40, 10, 10)
-    glPopMatrix()
+    if enemy_dead==False:
+        glPushMatrix()
+        if enemy_num>0 and enemy_num<=15:
+            glColor3f(0, 1, 0)  
+        elif enemy_num>15 and enemy_num<=30:
+            glColor3f(0, 0, 1)
+        elif enemy_num>30 and enemy_num<=60:
+            glColor3f(1, 0, 0)
+        elif enemy_health>60:
+            glColor3f(0, 0, 0)
+        glTranslatef(enemy_x, enemy_y, 0)
+        gluSphere(gluNewQuadric(), 40, 10, 10)
+        glPopMatrix()
 
 # Restore the previous matrix state
 def draw_power_ups():
@@ -204,15 +224,28 @@ def draw_power_ups():
         glScalef(1 + 2*s, 1 + 2*s, 1 + 2*s) 
         gluSphere(gluNewQuadric(), 60, 10, 10)
         glPopMatrix()
+
+def draw_coins():
+    global coin_x,coin_y,coin_taken,coin_diss
+    if coin_diss==False:
+        glPushMatrix()
+        glColor3f(1.0,1.0,0.0)
+        glTranslatef(coin_x, coin_y, 0)  # Use actual world coordinates, not relative
+        gluSphere(gluNewQuadric(), 30, 10, 10)
+        glPopMatrix()
+
+
 def draw_bullet():
     if bullet_active:
         glPushMatrix()
         glColor3f(1, 0, 0)
         glTranslatef(bullet_x, bullet_y, 0)
-        glutSolidSphere(10, 10, 10)
+        # glutSolidSphere(10, 10, 10)
+        glutSolidCube(10)
         glPopMatrix()
 def update_bullet():
-    global bullet_active, bullet_x, bullet_y, score
+    global bullet_active, bullet_x, bullet_y, score,enemy_dead,enemy_health,gun_power,enemy_num
+      
     if bullet_active:
         speed = 15
         rad = math.radians(bullet_angle)
@@ -225,8 +258,19 @@ def update_bullet():
         distance = math.sqrt(dx * dx + dy * dy)
         if distance < enemy_radius:
             bullet_active = False
-            score += 1
-            print("Hit! Score:", score)
+            enemy_health-=gun_power
+            if enemy_health<=0:
+                if enemy_num>0 and enemy_num<=15:
+                    score+=2
+                elif enemy_num>15 and enemy_num<=30:
+                    score+=4
+                elif enemy_num>30 and enemy_num<=60:
+                    score+=8
+                elif enemy_num>60:
+                    score+=10
+                print("Hit! Score:", score)
+                enemy_dead=True
+        
 
         # Deactivate bullet if offscreen
         if abs(bullet_x) > 1000 or abs(bullet_y) > 1000:
@@ -234,11 +278,11 @@ def update_bullet():
 
 def keyboardListener(key, x, y):
     global camera_pos,night_mode,Game_over,lives,cloud1_x,cloud1_y,cloud2_x,cloud2_y,cloud3_x,cloud3_y,cloud4_x,cloud4_y,s,snowman_x,snowman_y,obstacle_x,obstacle_y,inc,dec,collision_happened,score
-    global nose_angle, bullet_active, bullet_x, bullet_y, bullet_angle
+    global nose_angle, bullet_active, bullet_x, bullet_y, bullet_angle,gun_power,enemy_num
     x, y, z = camera_pos
     # Move camera up (UP arrow key)
     if key == b'm':
-        if z<500:
+        if z<600:
             z+=5
 
     # Move camera down (DOWN arrow key)
@@ -275,9 +319,13 @@ def keyboardListener(key, x, y):
         obstacle_y=-300
         collision_happened=False
         score=0
+        gun_power=1
+        enemy_num=1
     
     if key == b'a':
         nose_angle = (nose_angle + 10) % 360
+    if key == b'd':
+        nose_angle = (nose_angle - 10) % 360
     elif key == b' ' and not bullet_active:
         bullet_active = True
         bullet_x = snowman_x  # or adjust slightly if nose is offset
@@ -351,7 +399,8 @@ def idle():
     - Triggers screen redraw for real-time updates.
     """
     global s,inc,dec,obstacle_y,obstacle_x,cloud1_x,cloud1_y,cloud2_x,cloud2_y,cloud3_x,cloud3_y,cloud4_x,cloud4_y,snowman_x,lives,collision_happened,Game_over
-    global power_up_x,power_up_y,gun_power,powerup, enemy_x,enemy_y,enemy_hit,i
+    global power_up_x,power_up_y,gun_power,powerup, enemy_x,enemy_y,enemy_hit,i,enemy_num,enemy_dead,enemy_health
+    global coin_x,coin_y,coin_collected,coin_radius,score,multiplier_timer,multiplier_duration,coins
     if pause==False and Game_over==False:
         if inc:
             if s>=0.05:
@@ -387,6 +436,10 @@ def idle():
             power_up_x=random.randint(-700,-300)
             power_up_y=-4000
         power_up_y+=0.4
+        if coin_y>900:
+            coin_x=random.randint(-700,-300)
+            coin_y=-1000
+        coin_y+=0.4
         if obstacle_x>=0 and snowman_x>=obstacle_x:
             if (-obstacle_x + snowman_x) < 500 and abs(obstacle_y - 250) < 20:
                 if not collision_happened:
@@ -409,11 +462,50 @@ def idle():
         elif abs(power_up_x - snowman_x) >= 50 or abs(power_up_y - snowman_y) >= 2:
             powerup = False
 
+        if multiplier_timer > 0:
+            multiplier_timer -= 1
+            multiplier_duration = max(0, (multiplier_timer / 60))  # Convert frames to seconds for duration
+        else:
+            multiplier = 1 
+
+        if not coin_collected:
+            coin_y += 0.4  # Move the coin upwards
+            if coin_y >= 850:  # If the coin goes out of screen, reset it
+                coin_y = -2000
+                coin_x = random.randint(-500, 500)  # Randomize the position
+
+        # Check for collision with the snowman (coin)
+        dx = snowman_x - coin_x
+        dy = snowman_y + 250 - coin_y  # Match vertical snowman position
+        distance = (dx ** 2 + dy ** 2) ** 0.5
+
+        if distance < coin_radius + 50:  # Check if the snowman collides with the coin
+            score += 1  # Increase score based on the current multiplier
+            coins+=1
+            coin_collected = True  # Mark the coin as collected
+            print(f"Coin collected! Score: {score}")
+
+        # Reset the coin when collected
+        if coin_collected:
+            coin_y = -800  # Reset coin position
+            coin_x = random.randint(-500, 500)  # Randomize the new coin position
+            coin_collected = False
+
         if enemy_y >= 900:
             enemy_x = random.randint(-500, 500)
             i=random.choice([-0.1,0.1])
             enemy_y = -800
             enemy_hit = False
+            enemy_num+=1
+            if enemy_num>0 and enemy_num<=15:
+                enemy_health=2
+            elif enemy_num>15 and enemy_num<=30:
+                enemy_health=4
+            elif enemy_num>30 and enemy_num<=60:
+                enemy_health=8
+            elif enemy_num>60:
+                enemy_health=10
+            enemy_dead=False
 
         enemy_y += 0.5
         enemy_x+=i
@@ -481,9 +573,25 @@ def showScreen():
     draw_text(10, 770, f"Welcome to Sky Drop Survival")
     draw_text(10, 740, f"Remaining lives: {lives}")
     draw_text(10, 710, f"Total Score: {score}")
-    # draw_text(10, 680, f"Total Score: {power_up_y,power_up_x}")
-    # draw_text(10, 650, f"Total Score: {snowman_y,snowman_x}")
     draw_text(10, 680, f"Gun Power: {gun_power}")
+    if enemy_health==2:
+        draw_text(10, 650, f"Monster Territory: Green")
+    elif enemy_health==4:
+        draw_text(10, 650, f"Monster Territory: Blue")
+    elif enemy_health==8:
+        draw_text(10, 650, f"Monster Territory: Red")
+    elif enemy_health==10:
+        draw_text(10, 650, f"Monster Territory: Black")
+    draw_text(10, 620, f"Coins: {coins}")
+    if enemy_dead:
+        if enemy_num>0 and enemy_num<=15:
+            draw_text(10, 590, f"Monster Successfully Terminated. Reward 2 points")
+        elif enemy_num>15 and enemy_num<=30:
+            draw_text(10, 590, f"Monster Successfully Terminated. Reward 4 points")
+        elif enemy_num>30 and enemy_num<=60:
+            draw_text(10, 590, f"Monster Successfully Terminated. Reward 8 points")
+        elif enemy_num>60:
+            draw_text(10, 590, f"Monster Successfully Terminated. Reward 10 points")
     if Game_over:
         draw_text(450, 450, f"GAME OVER")
         draw_text(450, 420, f"PRESS ENTER TO RESTART")
@@ -491,6 +599,7 @@ def showScreen():
     draw_shapes()
     draw_power_ups()
     draw_bullet()
+    draw_coins()
     # Swap buffers for smooth rendering (double buffering)
     glutSwapBuffers()
 
@@ -513,4 +622,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
